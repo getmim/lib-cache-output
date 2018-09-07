@@ -48,10 +48,15 @@ class Callback
         $nl = PHP_EOL;
         $expires = time() + \Mim::$app->res->getCache();
 
+        $res = [
+            'etag' => $etag,
+            'headers' => \Mim::$app->res->getHeader()
+        ];
+
         $tx = '<?php' . $nl . $nl;
         $tx.= 'if(time() > ' . $expires . ')' . $nl;
         $tx.= '    return false;' . $nl;
-        $tx.= 'return \'' . $etag . '\';';
+        $tx.= 'return ' . to_source($res) . ';';
 
         return $tx;
     }
@@ -89,7 +94,7 @@ class Callback
 
         $mim = &\Mim::$app->res;
 
-        $etag = include $cache_file;
+        $cache_data = include $cache_file;
 
         $caches = [
             'br'    => 'brotli',
@@ -98,7 +103,7 @@ class Callback
         ];
 
         // remove the cache
-        if(!$etag){
+        if(!$cache_data){
             unlink($cache_file);
             foreach($caches as $cache){
                 $cache_data_file = $cache_file . '.' . $cache;
@@ -107,6 +112,9 @@ class Callback
             }
             return;
         }
+
+        $etag = $cache_data['etag'];
+        $headers = $cache_data['headers'];
 
         $req_etag = \Mim::$app->req->getServer('HTTP_IF_NONE_MATCH');
 
@@ -118,6 +126,7 @@ class Callback
         }
 
         $accepts = \Mim::$app->req->accept->encoding;
+        $accepts[] = 'plain';
         $encoding = 'plain';
         foreach($caches as $header => $cache){
             $cache_data_file = $cache_file . '.' . $cache;
@@ -127,6 +136,11 @@ class Callback
             $used_content = file_get_contents($cache_data_file);
             $mim->addHeader('Content-Length', strlen($used_content), false);
             $mim->addContent($used_content, true);
+
+            foreach($headers as $name => $values){
+                foreach($values as $val)
+                    $mim->addHeader($name, $val);
+            }
 
             if($header != 'plain')
                 $mim->addHeader('Content-Encoding', $header);
@@ -172,17 +186,18 @@ class Callback
         $used_content = $content['plain'];
         if(!isset($content[$resp_compress]))
             $resp_compress = 'plain';
-        
+
         $used_content = $content[$resp_compress];
         $mim->addHeader('Content-Length', strlen($used_content), false);
         $mim->addContent($used_content, true);
 
         $content_encoding = '';
-
+        
         if($resp_compress === 'brotli')
             $content_encoding = 'br';
-        elseif($resp_compress = 'gzip')
+        elseif($resp_compress === 'gzip')
             $content_encoding = 'gzip';
+        
 
         if($content_encoding)
             $mim->addHeader('Content-Encoding', $content_encoding);
