@@ -44,12 +44,12 @@ class Callback
     }
 
     private static function buildCacheFile($path, $etag){
-        $name = basename($path);
-        $nl = PHP_EOL;
+        $name    = basename($path);
+        $nl      = PHP_EOL;
         $expires = time() + \Mim::$app->res->getCache();
 
         $res = [
-            'etag' => $etag,
+            'etag'    => $etag,
             'headers' => \Mim::$app->res->getHeader()
         ];
 
@@ -88,6 +88,9 @@ class Callback
 
     // check output cache, print it if exists
     static function coreReady(){
+        if(is_dev())
+            return;
+
         $cache_file = self::getCachePath();
         if(!is_file($cache_file))
             return;
@@ -113,7 +116,7 @@ class Callback
             return;
         }
 
-        $etag = $cache_data['etag'];
+        $etag    = $cache_data['etag'];
         $headers = $cache_data['headers'];
 
         $req_etag = \Mim::$app->req->getServer('HTTP_IF_NONE_MATCH');
@@ -153,6 +156,9 @@ class Callback
     }
 
     static function corePrinting(){
+        if(is_dev())
+            return true;
+
         ini_set('zlib.output_compression','Off');
         $mim = &\Mim::$app->res;
 
@@ -163,9 +169,12 @@ class Callback
         $cookies = $mim->getCookie();
         $headers = $mim->getHeader();
 
-        $skip_cache = $status != 200 || !!$cookies;
-        $resp_compress = 'plain';
+        $skip_cache      = $status != 200 || !!$cookies;
+        $resp_compress   = 'plain';
         $target_compress = ['brotli', 'gzip'];
+
+        if(!$mim->getCache())
+            $skip_cache = true;
 
         $accepts = \Mim::$app->req->accept->encoding;
         if(in_array('br', $accepts))
