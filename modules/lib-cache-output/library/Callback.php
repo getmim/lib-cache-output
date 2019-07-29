@@ -63,7 +63,7 @@ class Callback
 
     private static function getCachePath(){
         $path = \Mim::$app->req->path;
-        $cache_path = BASEPATH . '/etc/cache/output/';
+        $cache_path = self::getCacheBase();
         $cache_name = 'req';
 
         $path = trim($path, '/');
@@ -214,5 +214,13 @@ class Callback
             $mim->addHeader('ETag', $etag, false);
 
         return true;
+    }
+
+    static function getCacheBase(){
+        $path = \Mim::$app->config->libCacheOutput->path;
+        if(substr($path, 0, 1) != '/')
+            $path = BASEPATH . '/' . chop($path, '/') . '/';
+
+        return $path;
     }
 }

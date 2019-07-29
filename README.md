@@ -26,6 +26,7 @@ Module ini menerima tambahan konfigurasi pada aplikasi sebagai berikut:
 ```php
 return [
     'libCacheOutput' => [
+        'path' => 'etc/cache/output',
         'query' => [
             'page' => 1,
             'rpp' => 12,
@@ -35,7 +36,11 @@ return [
 ];
 ```
 
-Properti query pada konfigurasi di atas menentukan daftar query parameter
+Properti `path` menentukan dimana semua file cache akan disimpan. Nilai default
+adalah `etc/cache/output`. Jika diawali dengan `/`, maka nilai tersebut dianggap
+sebagai absolute path. Jika tidak, maka akan ditambahkan prefix constant `BASEPATH`.
+
+Properti `query` pada konfigurasi di atas menentukan daftar query parameter
 yang diikutkan pada proses kalkulasi cache output. Sebagai contoh, url dengan
 query parameter `?q=a` dianggap berbeda dengan url `?q=b`. Tetapi, url dengan
 query parameter `?q=a&sort=s&sord=1` dianggap sama dengan `?q=a`, karena query
@@ -50,3 +55,15 @@ dianggap sama.
 Begitu konten selesai di proses di kontroler, memanggil perintah `$this->res->setCache(int)`
 sebelum memanggil `$this->res->send()` akan membuat cache yang akan digunakan oleh system
 ketika ada request ke halaman yang sama selanjutnya.
+
+## Hapus
+
+Untuk menghapus suatu output cache dari storage, bisa menggunakan library `LibCacheOutput\Library\Cleaner`.
+
+Ginakan method `router` untuk menghapus berdasarkan suatu route:
+
+```php
+use LibCacheOutput\Library\Cleaner;
+
+Cleaner::router('routeName', ['route'=>'param']);
+```

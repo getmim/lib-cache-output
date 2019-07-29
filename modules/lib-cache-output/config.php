@@ -2,7 +2,7 @@
 
 return [
     '__name' => 'lib-cache-output',
-    '__version' => '0.0.2',
+    '__version' => '0.0.3',
     '__git' => 'git@github.com:getmim/lib-cache-output.git',
     '__license' => 'MIT',
     '__author' => [
@@ -35,14 +35,15 @@ return [
     'callback' => [
         'core' => [
             'ready' => [
-                'LibCacheOutput\\Library\\Callback::coreReady' => true
+                'LibCacheOutput\\Library\\Callback::coreReady' => TRUE
             ],
             'printing' => [
-                'LibCacheOutput\\Library\\Callback::corePrinting' => true
+                'LibCacheOutput\\Library\\Callback::corePrinting' => TRUE
             ]
         ]
     ],
     'libCacheOutput' => [
+        'path' => 'etc/cache/output',
         'query' => [
             'page' => 1
         ]
